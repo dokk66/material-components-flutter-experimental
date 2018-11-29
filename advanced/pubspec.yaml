@@ -5,12 +5,15 @@ dependencies:
   flutter:
     sdk: flutter
   intl: ^0.15.6
+  firebase_ml_vision: ^0.2.0
+  image_picker: ^0.4.5
 
   cupertino_icons: ^0.1.0
   scoped_model: 0.3.0
   shrine_images: 1.0.0
 
 dev_dependencies:
+
   flutter_test:
     sdk: flutter
 
