@@ -6,8 +6,11 @@ dependencies:
     sdk: flutter
   intl: ^0.15.6
   firebase_ml_vision: ^0.2.0
+  camera:
+    path: ./forked_plugins/camera
   image_picker: ^0.4.5
-
+  path_provider: ^0.4.1
+  mlkit:
   cupertino_icons: ^0.1.0
   scoped_model: 0.3.0
   shrine_images: 1.0.0

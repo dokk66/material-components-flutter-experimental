@@ -1,10 +1,18 @@
+import 'dart:async';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'home.dart';
 import 'package:scoped_model/scoped_model.dart';
+
 import 'Shrine/model/app_state_model.dart';
 
+import 'home.dart';
 
-void main() {
+
+void logError(String code, String message) =>
+    print('Error: $code\nError Message: $message');
+
+Future<void> main() async {
   AppStateModel model = AppStateModel();
   model.loadProducts();
 

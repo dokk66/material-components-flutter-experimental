@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,6 +22,32 @@ class _ML_ViewState extends State<ML_View> {
   Size _imageSize;
   dynamic _scanResults;
   Detector _currentDetector = Detector.text;
+  CameraController controller;
+  List<CameraDescription> cameras;
+  bool _isReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupCameras();
+  }
+
+  Future<void> _setupCameras() async {
+    try {
+      // initialize cameras.
+      cameras = await availableCameras();
+      // initialize camera controllers.
+      controller = new CameraController(cameras[0], ResolutionPreset.medium);
+      await controller.initialize();
+    } on CameraException catch (_) {
+      // do something on error.
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isReady = true;
+    });
+  }
 
   Future<void> _getAndScanImage() async {
     setState(() {
@@ -29,7 +56,7 @@ class _ML_ViewState extends State<ML_View> {
     });
 
     final File imageFile =
-    await ImagePicker.pickImage(source: ImageSource.gallery);
+        await ImagePicker.pickImage(source: ImageSource.gallery);
 
     if (imageFile != null) {
       _getImageSize(imageFile);
@@ -46,7 +73,7 @@ class _ML_ViewState extends State<ML_View> {
 
     final Image image = Image.file(imageFile);
     image.image.resolve(const ImageConfiguration()).addListener(
-          (ImageInfo info, bool _) {
+      (ImageInfo info, bool _) {
         completer.complete(Size(
           info.image.width.toDouble(),
           info.image.height.toDouble(),
@@ -66,7 +93,7 @@ class _ML_ViewState extends State<ML_View> {
     });
 
     final FirebaseVisionImage visionImage =
-    FirebaseVisionImage.fromFile(imageFile);
+        FirebaseVisionImage.fromFile(imageFile);
 
     FirebaseVisionDetector detector;
     switch (_currentDetector) {
@@ -136,14 +163,14 @@ class _ML_ViewState extends State<ML_View> {
       ),
       child: _imageSize == null || _scanResults == null
           ? const Center(
-        child: Text(
-          'Scanning...',
-          style: TextStyle(
-            color: Colors.green,
-            fontSize: 30.0,
-          ),
-        ),
-      )
+              child: Text(
+                'Scanning...',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 30.0,
+                ),
+              ),
+            )
           : _buildResults(_imageSize, _scanResults),
     );
   }
@@ -160,33 +187,43 @@ class _ML_ViewState extends State<ML_View> {
               if (_imageFile != null) _scanImage(_imageFile);
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<Detector>>[
-              const PopupMenuItem<Detector>(
-                child: Text('Detect Barcode'),
-                value: Detector.barcode,
-              ),
-              const PopupMenuItem<Detector>(
-                child: Text('Detect Face'),
-                value: Detector.face,
-              ),
-              const PopupMenuItem<Detector>(
-                child: Text('Detect Label'),
-                value: Detector.label,
-              ),
-              const PopupMenuItem<Detector>(
-                child: Text('Detect Cloud Label'),
-                value: Detector.cloudLabel,
-              ),
-              const PopupMenuItem<Detector>(
-                child: Text('Detect Text'),
-                value: Detector.text,
-              ),
-            ],
+                  const PopupMenuItem<Detector>(
+                    child: Text('Detect Barcode'),
+                    value: Detector.barcode,
+                  ),
+                  const PopupMenuItem<Detector>(
+                    child: Text('Detect Face'),
+                    value: Detector.face,
+                  ),
+                  const PopupMenuItem<Detector>(
+                    child: Text('Detect Label'),
+                    value: Detector.label,
+                  ),
+                  const PopupMenuItem<Detector>(
+                    child: Text('Detect Cloud Label'),
+                    value: Detector.cloudLabel,
+                  ),
+                  const PopupMenuItem<Detector>(
+                    child: Text('Detect Text'),
+                    value: Detector.text,
+                  ),
+                ],
           ),
         ],
       ),
-      body: _imageFile == null
-          ? const Center(child: Text('No image selected.'))
-          : _buildImage(),
+//      body: _imageFile == null
+//          ? const Center(child: Text('No image selected.'))
+//          : _buildImage(),
+//      floatingActionButton: FloatingActionButton(
+//        onPressed: _getAndScanImage,
+//        tooltip: 'Pick Image',
+//        child: const Icon(Icons.add_a_photo),
+//      ),
+      body: _isReady
+          ? AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: CameraPreview(controller))
+          : Container(),
       floatingActionButton: FloatingActionButton(
         onPressed: _getAndScanImage,
         tooltip: 'Pick Image',
